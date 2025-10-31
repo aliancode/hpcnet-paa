@@ -97,17 +97,18 @@ class HPCNet(nn.Module):
         )
         return logits, cp_bank, ip_bank, top_idxs
 
-    def consistency_loss(self, top_idxs, cp_bank, ip_bank):
-        if cp_bank.size(0) == 0 or ip_bank.size(0) == 0:
-            return torch.tensor(0.0, device=ip_bank.device)
-        loss = 0.0
-        for b in range(top_idxs.size(0)):
-            selected_ips = top_idxs[b]
-            for ip_idx in selected_ips:
-                beta = self.prompt_bank.ip_betas[self.class_names[ip_idx]]
-                if len(beta) > 0:
-                    loss += torch.norm(beta, p=1)
-        return loss * 0.01
+def consistency_loss(self, top_idxs, cp_bank, ip_bank):
+    if cp_bank.size(0) == 0 or ip_bank.size(0) == 0:
+        return torch.tensor(0.0, device=ip_bank.device)
+    loss = 0.0
+    # Enforce sparsity in composition vectors (Assumption A2)
+    for cls in self.ip_betas:
+        beta = self.ip_betas[cls]
+        if len(beta) > 0:
+            loss += torch.norm(beta, p=1)  # L1 sparsity on β
+    for alpha in self.cp_alphas:
+        loss += torch.norm(alpha, p=1)    # L1 sparsity on α
+    return loss * 0.01
 
     def add_new_class(self, class_id: str):
         self.class_names.append(class_id)
