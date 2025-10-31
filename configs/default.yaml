@@ -1,1 +1,14 @@
-
+seed: 42
+dataset: "split_cifar100"
+num_tasks: 10
+buffer_size: 2000
+embed_dim: 512
+K_F: 16
+top_k_routing: 56
+lr: 3e-3
+batch_size: 128
+epochs_per_task: 5
+device: "cuda"
+checkpoint_dir: "checkpoints"
+log_dir: "runs"
+zero_shot_classes: ["airplane", "car", "dog", "cat", "horse"]
