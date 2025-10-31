@@ -1,0 +1,29 @@
+import torch
+import torch.nn as nn
+from transformers import CLIPModel, CLIPProcessor
+from typing import List, Union
+from PIL.Image import Image
+
+class FrozenCLIP(nn.Module):
+    def __init__(self, model_name: str = "openai/clip-vit-base-patch16"):
+        super().__init__()
+        self.model = CLIPModel.from_pretrained(model_name)
+        self.processor = CLIPProcessor.from_pretrained(model_name)
+        for param in self.model.vision_model.parameters():
+            param.requires_grad = False
+        for param in self.model.text_model.parameters():
+            param.requires_grad = False
+        self.model.eval()
+
+    def encode_image(self, images: Union[torch.Tensor, List[Image]]):
+        if isinstance(images, torch.Tensor) and images.dim() == 3:
+            images = [images]
+        inputs = self.processor(images=images, return_tensors="pt", do_rescale=False)
+        inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
+        return self.model.get_image_features(**inputs)
+
+    def encode_text_batch(self, class_names: List[str]):
+        prompts = [f"a photo of a {name}" for name in class_names]
+        inputs = self.processor(text=prompts, return_tensors="pt", padding=True)
+        inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
+        return self.model.get_text_features(**inputs)
