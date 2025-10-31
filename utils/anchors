@@ -1,0 +1,12 @@
+import torch
+import torch.nn.functional as F
+
+def spa_loss(prompt_bank, fp_anchors, ip_prototypes, class_names, device):
+    loss = 0.0
+    loss += F.mse_loss(prompt_bank.fp_prompts, fp_anchors.to(device))
+    for i, cls in enumerate(class_names):
+        if cls in ip_prototypes:
+            ip = prompt_bank.get_instance_prompt(cls).to(device)
+            proto = ip_prototypes[cls].to(device)
+            loss += F.mse_loss(ip, proto)
+    return loss
