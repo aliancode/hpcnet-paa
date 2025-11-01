@@ -20,8 +20,24 @@ def compute_A_t(model, dataset, all_classes):
             total += len(targets)
     return correct / total
 
-def compute_A_zs(model, zero_shot_classes):
-    return 0.984  # From paper
+def load_zero_shot_dataset(dataset_name):
+    if dataset_name == "imagenet-a":
+        return datasets.ImageFolder("./data/imagenet-a", transform=...)
+    elif dataset_name == "medstream-zs":
+        return MedStreamZS()  # Real zero-shot medical classes
+
+def compute_A_zs(model, zero_shot_classes, zs_dataset):
+    loader = torch.utils.data.DataLoader(zs_dataset, batch_size=128)
+    correct, total = 0, 0
+    with torch.no_grad():
+        for images, labels in loader:
+            class_ids = [f"class_{l}" for l in labels]
+            logits, _, _, _ = model(images, zero_shot_classes)
+            targets = torch.tensor([zero_shot_classes.index(cid) for cid in class_ids])
+            acc = accuracy(logits, targets)
+            correct += acc * len(targets)
+            total += len(targets)
+    return correct / total
 
 def compute_BWT(task_accuracies):
     if len(task_accuracies) < 2:
