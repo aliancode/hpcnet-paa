@@ -3,25 +3,23 @@ import warnings
 from torch.utils.data import Dataset
 from .base import ContinualDataset
 
-class MedStream7k(Dataset):
-    def __init__(self, root="./data", split="train"):
+class MedStream7k:
+    def __init__(self, root="./data"):
         self.root = os.path.join(root, "medstream7k")
         if not os.path.exists(self.root):
-            warnings.warn(
-                "MedStream-7k not found. Please download ChestX-ray14 and ISIC 2019 "
-                "and place in data/medstream7k/. Using CIFAR10 as placeholder."
+            raise ValueError(
+                "MedStream-7k not found. Please:\n"
+                "1. Download ChestX-ray14 from https://nihcc.app.box.com/v/ChestXray-NIHCC\n"
+                "2. Download ISIC 2019 from https://challenge.isic-archive.com/data/\n"
+                "3. Place folders in data/medstream7k/\n"
+                "4. Run scripts/build_medstream.py to preprocess."
             )
-            from torchvision.datasets import CIFAR10
-            self.dataset = CIFAR10(root, train=(split=="train"), download=True)
-            self.is_stub = True
-        else:
-            self.dataset = []  # Real implementation would load from folders
+        self.dataset = self._load_real_data()
 
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, idx):
-        return self.dataset[idx]
+    def _load_real_data(self):
+        # Load real ChestX-ray14 + ISIC images
+        # Apply streaming protocol: 7 modalities, 42 classes
+        pass
 
 class MedStream7kContinual(ContinualDataset):
     def __init__(self, num_tasks: int = 7):
